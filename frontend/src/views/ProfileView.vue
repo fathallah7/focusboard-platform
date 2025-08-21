@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import Spinner from '@/components/Spinner.vue';
 
 const router = useRouter();
 
@@ -15,7 +16,10 @@ const user = ref({
 const profilePicture = ref(null);
 const profilePicturePreview = ref('https://i.pravatar.cc/150'); // Default preview
 
+const loading = ref(false);
+
 const fetchUserData = async () => {
+    loading.value = true;
     try {
         const response = await axios.get('http://127.0.0.1:8000/api/profile');
         user.value = response.data.user;
@@ -23,6 +27,8 @@ const fetchUserData = async () => {
         profilePicturePreview.value = response.data.user.profile_picture || 'https://i.pravatar.cc/150';
     } catch (error) {
         console.error('Error fetching user data:', error);
+    } finally {
+        loading.value = false;
     }
 };
 
@@ -88,82 +94,89 @@ onMounted(() => {
             My Profile
         </h2>
 
-        <!-- Profile Layout -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-            <!-- Profile Picture and Info -->
-            <div class="col-span-1 flex flex-col items-center">
-                <img :src="profilePicturePreview" alt="User Profile"
-                    class="w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full border-4 border-indigo-400 dark:border-indigo-600 shadow-lg transform hover:scale-110 transition-transform duration-300" />
-                <h3 class="mt-3 sm:mt-4 text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    {{ user.name || 'User' }}
+        <Spinner v-if="loading" />
+
+        <div v-else>
+            <!-- Profile Layout -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+                <!-- Profile Picture and Info -->
+                <div class="col-span-1 flex flex-col items-center">
+                    <img :src="profilePicturePreview" alt="User Profile"
+                        class="w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full border-4 border-indigo-400 dark:border-indigo-600 shadow-lg transform hover:scale-110 transition-transform duration-300" />
+                    <h3 class="mt-3 sm:mt-4 text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
+                        {{ user.name || 'User' }}
+                    </h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        {{ user.email || 'No email' }}
+                    </p>
+                </div>
+
+                <!-- Profile Form -->
+                <div class="col-span-1 md:col-span-2">
+                    <form class="space-y-4 sm:space-y-5" @submit.prevent="updateUserData">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Full
+                                Name</label>
+                            <input type="text" id="name" v-model="user.name" required
+                                class="mt-1 w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-300 shadow-sm hover:shadow-md" />
+                        </div>
+                        <div>
+                            <label for="email"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                            <input type="email" id="email" v-model="user.email" required placeholder="Enter your email"
+                                class="mt-1 w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-300 shadow-sm hover:shadow-md" />
+                        </div>
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">New
+                                Password</label>
+                            <input type="password" id="password" v-model="user.password"
+                                placeholder="Enter new password"
+                                class="mt-1 w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-300 shadow-sm hover:shadow-md" />
+                        </div>
+                        <div>
+                            <label for="confirm-password"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm New
+                                Password</label>
+                            <input type="password" id="confirm-password" v-model="user.password_confirmation"
+                                placeholder="Confirm new password"
+                                class="mt-1 w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-300 shadow-sm hover:shadow-md" />
+                        </div>
+                        <div>
+                            <label for="profile-picture"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Profile
+                                Picture</label>
+                            <input type="file" id="profile-picture" accept="image/*"
+                                @change="handleProfilePictureChange"
+                                class="mt-1 w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-300 shadow-sm hover:shadow-md" />
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" @click="fetchUserData"
+                                class="px-4 py-2 sm:px-5 sm:py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none transition-all duration-300 shadow-sm hover:shadow-md">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                class="px-4 py-2 sm:px-5 sm:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-400 focus:outline-none transition-all duration-300 flex items-center shadow-sm hover:shadow-md">
+                                <span class="material-icons-outlined mr-2 text-lg">save</span>
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Delete Account -->
+            <div class="mt-6 sm:mt-10">
+                <h3 class="text-base sm:text-lg font-semibold text-red-600 dark:text-red-400">
+                    Delete Account
                 </h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
-                    {{ user.email || 'No email' }}
+                    This action cannot be undone.
                 </p>
+                <button @click="deleteUserAccount"
+                    class="mt-2 sm:mt-3 px-4 py-2 sm:px-5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-400 focus:outline-none transition-all duration-300 shadow-sm hover:shadow-md">
+                    Delete My Account
+                </button>
             </div>
-
-            <!-- Profile Form -->
-            <div class="col-span-1 md:col-span-2">
-                <form class="space-y-4 sm:space-y-5" @submit.prevent="updateUserData">
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Full
-                            Name</label>
-                        <input type="text" id="name" v-model="user.name" required
-                            class="mt-1 w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-300 shadow-sm hover:shadow-md" />
-                    </div>
-                    <div>
-                        <label for="email"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                        <input type="email" id="email" v-model="user.email" required placeholder="Enter your email"
-                            class="mt-1 w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-300 shadow-sm hover:shadow-md" />
-                    </div>
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">New
-                            Password</label>
-                        <input type="password" id="password" v-model="user.password" placeholder="Enter new password"
-                            class="mt-1 w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-300 shadow-sm hover:shadow-md" />
-                    </div>
-                    <div>
-                        <label for="confirm-password"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm New
-                            Password</label>
-                        <input type="password" id="confirm-password" v-model="user.password_confirmation"
-                            placeholder="Confirm new password"
-                            class="mt-1 w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-300 shadow-sm hover:shadow-md" />
-                    </div>
-                    <div>
-                        <label for="profile-picture"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Profile Picture</label>
-                        <input type="file" id="profile-picture" accept="image/*" @change="handleProfilePictureChange"
-                            class="mt-1 w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-300 shadow-sm hover:shadow-md" />
-                    </div>
-                    <div class="flex justify-end space-x-3">
-                        <button type="button" @click="fetchUserData"
-                            class="px-4 py-2 sm:px-5 sm:py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none transition-all duration-300 shadow-sm hover:shadow-md">
-                            Cancel
-                        </button>
-                        <button type="submit"
-                            class="px-4 py-2 sm:px-5 sm:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-400 focus:outline-none transition-all duration-300 flex items-center shadow-sm hover:shadow-md">
-                            <span class="material-icons-outlined mr-2 text-lg">save</span>
-                            Save Changes
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Delete Account -->
-        <div class="mt-6 sm:mt-10">
-            <h3 class="text-base sm:text-lg font-semibold text-red-600 dark:text-red-400">
-                Delete Account
-            </h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-                This action cannot be undone.
-            </p>
-            <button @click="deleteUserAccount"
-                class="mt-2 sm:mt-3 px-4 py-2 sm:px-5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-400 focus:outline-none transition-all duration-300 shadow-sm hover:shadow-md">
-                Delete My Account
-            </button>
         </div>
     </div>
 </template>

@@ -3,10 +3,13 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { format } from 'date-fns';
 import QuoteCard from '@/components/QuoteCard.vue';
+import Spinner from '@/components/Spinner.vue';
 
 const quotes = ref([]);
 const showModal = ref(false);
 const newQuote = ref('');
+
+const loading = ref(false);
 
 const addQuote = async () => {
     try {
@@ -22,12 +25,15 @@ const addQuote = async () => {
 };
 
 const fetchQuotes = async () => {
+    loading.value = true;
     try {
         const response = await axios.get('http://127.0.0.1:8000/api/quotes');
         quotes.value = response.data;
         console.log('Quotes fetched successfully:', quotes.value);
     } catch (error) {
         console.error('Error fetching quotes:', error);
+    } finally {
+        loading.value = false;
     }
 };
 
@@ -82,9 +88,12 @@ onMounted(() => {
             </div>
         </div>
 
+        <Spinner v-if="loading" />
+
         <!-- Quotes List -->
         <QuoteCard v-for="quote in quotes" :key="quote.id" :quote="quote" :formatDate="formatDate" />
-    
+
+
     </div>
 </template>
 
