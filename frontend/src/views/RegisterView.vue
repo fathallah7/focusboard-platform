@@ -3,7 +3,9 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { useToast } from 'vue-toastification';
 
+const toast = useToast();
 const router = useRouter();
 
 const name = ref('');
@@ -21,9 +23,10 @@ const register = async () => {
         });
         console.log('Registration successful:', response.data);
         router.push('/login');
+        toast.success('Registration successful! Please log in.');
     } catch (error) {
         console.error('Error registering:', error);
-        alert('Registration failed. Please try again.');
+        toast.error('Registration failed. Please try again.');
     }
 };
 

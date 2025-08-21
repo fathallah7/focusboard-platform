@@ -3,7 +3,9 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { useToast } from 'vue-toastification';
 
+const toast = useToast();
 const router = useRouter();
 
 const email = ref('');
@@ -21,7 +23,7 @@ const login = async () => {
         location.reload();
     } catch (error) {
         console.error('Error logging in:', error);
-        alert('Login failed. Please try again.');
+        toast.error('Login failed. Wrong email or password.');
     }
 };
 

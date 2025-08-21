@@ -4,6 +4,9 @@ import axios from 'axios';
 import { format } from 'date-fns';
 import QuoteCard from '@/components/QuoteCard.vue';
 import Spinner from '@/components/Spinner.vue';
+import { useToast } from 'vue-toastification';
+
+const toast = useToast();
 
 const quotes = ref([]);
 const showModal = ref(false);
@@ -19,8 +22,10 @@ const addQuote = async () => {
         await fetchQuotes();
         newQuote.value = '';
         showModal.value = false;
+        toast.success('Quote added successfully!');
     } catch (error) {
         console.error('Error adding quote:', error);
+        toast.error('Failed to add quote.');
     }
 };
 

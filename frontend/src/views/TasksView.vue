@@ -2,6 +2,9 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import Spinner from '@/components/Spinner.vue';
+import { useToast } from 'vue-toastification';
+
+const toast = useToast();
 
 const tasks = ref([]);
 const showModal = ref(false);
@@ -46,8 +49,10 @@ const createTask = async () => {
         await fetchTasks();
         showModal.value = false;
         newTask.value = { title: '', description: '', status: 'pending', priority: 'low', due_date: '' };
+        toast.success('Task created successfully!');
     } catch (error) {
         console.error('Error creating task:', error);
+        toast.error('Failed to create task.');  
     }
 };
 
@@ -61,8 +66,10 @@ const updateTask = async () => {
         await axios.put(`http://127.0.0.1:8000/api/tasks/${editTask.value.id}`, editTask.value);
         await fetchTasks();
         showEditModal.value = false;
+        toast.success('Task updated successfully!');
     } catch (error) {
         console.error('Error updating task:', error);
+        toast.error('Failed to update task.');
     }
 };
 
@@ -70,8 +77,10 @@ const deleteTask = async (id) => {
     try {
         await axios.delete(`http://127.0.0.1:8000/api/tasks/${id}`);
         await fetchTasks();
+        toast.success('Task deleted successfully!');
     } catch (error) {
         console.error('Error deleting task:', error);
+        toast.error('Failed to delete task.');
     }
 };
 

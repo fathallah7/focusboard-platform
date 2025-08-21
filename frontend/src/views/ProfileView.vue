@@ -3,7 +3,9 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import Spinner from '@/components/Spinner.vue';
+import { useToast } from 'vue-toastification';
 
+const toast = useToast();
 const router = useRouter();
 
 const user = ref({
@@ -54,8 +56,10 @@ const updateUserData = async () => {
         user.value.password = '';
         user.value.password_confirmation = '';
         profilePicture.value = null;
+        toast.success('Profile updated successfully!');
     } catch (error) {
         console.error('Error updating user data:', error);
+        toast.error('Failed to update profile.');
     }
 };
 
